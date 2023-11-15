@@ -12,11 +12,13 @@ export default class RBush {
         return this._all(this.data, []);
     }
 
-    search(bbox) {
+    search(bbox, options) {
         let node = this.data;
         const result = [];
+        const intersectsFn = options.intersects || intersects;
+        const containsFn = options.contains || contains;
 
-        if (!intersects(bbox, node)) return result;
+        if (!intersectsFn(bbox, node)) return result;
 
         const toBBox = this.toBBox;
         const nodesToSearch = [];
@@ -26,9 +28,9 @@ export default class RBush {
                 const child = node.children[i];
                 const childBBox = node.leaf ? toBBox(child) : child;
 
-                if (intersects(bbox, childBBox)) {
+                if (intersectsFn(bbox, childBBox)) {
                     if (node.leaf) result.push(child);
-                    else if (contains(bbox, childBBox)) this._all(child, result);
+                    else if (containsFn(bbox, childBBox)) this._all(child, result);
                     else nodesToSearch.push(child);
                 }
             }
@@ -38,10 +40,12 @@ export default class RBush {
         return result;
     }
 
-    collides(bbox) {
+    collides(bbox, options) {
         let node = this.data;
+        const intersectsFn = options.intersects || intersects;
+        const containsFn = options.contains || contains;
 
-        if (!intersects(bbox, node)) return false;
+        if (!intersectsFn(bbox, node)) return false;
 
         const nodesToSearch = [];
         while (node) {
@@ -49,8 +53,8 @@ export default class RBush {
                 const child = node.children[i];
                 const childBBox = node.leaf ? this.toBBox(child) : child;
 
-                if (intersects(bbox, childBBox)) {
-                    if (node.leaf || contains(bbox, childBBox)) return true;
+                if (intersectsFn(bbox, childBBox)) {
+                    if (node.leaf || containsFn(bbox, childBBox)) return true;
                     nodesToSearch.push(child);
                 }
             }
